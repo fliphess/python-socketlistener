@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+import argparse
+import os
+import sys
+from python_socketlistener.client import SocketSender
+
+
+def parse_options():
+    p = argparse.ArgumentParser(description="Send2Socket")
+    p.add_argument('-s', '--socket', dest='socket', required=True, type=str, help='The socket to send to')
+    p.add_argument('-p', '--port', dest='port', required=True, type=str, help='The port to send to')
+    p.add_argument('-d', '--data', dest='data', required=True, type=str, help='The data to send')
+    return p.parse_args()
+
+
+def main():
+    arguments = parse_options()
+    user = os.environ.get('SOCKET_USER', None)
+    psk = os.environ.get('SOCKET_PSK', None)
+    if not user or not psk:
+        print "Please set SOCKET_USER and SOCKET_PSK in your environment variables containing username and password"
+        sys.exit(1)
+
+    a = SocketSender(user=user, psk=psk, host=arguments.socket, port=int(arguments.port))
+    print "Sending command %s" % arguments.data
+    a.send(arguments.data)
+    a.close()
+    print "Done"
+
+if __name__ == '__main__':
+    main()

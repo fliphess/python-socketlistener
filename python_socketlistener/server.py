@@ -63,6 +63,7 @@ class SocketServer(asyncore.dispatcher):
             self.log("[Close] Closed connection to %s" % self.host)
 
     def handle_read(self):
+        user = 'unknown'
         data, address = self.recvfrom(2048)
         if not data:
             return
@@ -77,16 +78,19 @@ class SocketServer(asyncore.dispatcher):
             decrypted_data = Crypto(psk=psk).decrypt(string=string)
             if self.verbose:
                 self.log('[Incoming] - %s - %s - %s' % (user, address, decrypted_data))
-            queue.add(SocketEvent(data=decrypted_data, address=address, user=user, time=time.ctime()))
+            if decrypted_data:
+                queue.add(SocketEvent(data=decrypted_data, address=address, user=user, time=time.ctime()))
+            else:
+                raise CryptoException('Failed to decrypt incoming data')
 
         except (ValueError, TypeError):
             if self.verbose:
                 self.log('Failed to decode data from %s' % address)
             return False
 
-        except CryptoException:
+        except CryptoException as e:
             if self.verbose:
-                self.log("[Decryption] Failed to decrypt input for user %s - %s" % (address, user))
+                self.log("[Decryption] Failed to decrypt input for user %s - %s: %s" % (address, user, e))
             return False
 
     def _get_psk(self, user):
