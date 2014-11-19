@@ -133,6 +133,7 @@ class TestSocketServer(SocketTestCase):
         from python_socketlistener.server import queue
         self.assertEqual(queue[0]['user'], 'alice')
         self.assertEqual(queue[0]['data'], 'alice sends')
+
         self.assertEqual(queue[1]['user'], 'bob')
         self.assertEqual(queue[1]['data'], 'bob sends')
 
