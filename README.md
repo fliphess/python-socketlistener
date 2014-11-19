@@ -22,7 +22,7 @@ A very basic client server setup for sending data encrypted over a unix or tcp s
 ## Stop Server
 ```python
 
-    server.stop
+    server.stop()
 ```
 
 You can check the status of the server with ```server.running()```
