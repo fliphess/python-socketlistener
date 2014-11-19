@@ -119,3 +119,7 @@ class SocketServerCtl(threading.Thread):
 
     def running(self):
         return self.continue_running
+
+    def reload(self):
+        self.continue_running = False
+        self.start()
