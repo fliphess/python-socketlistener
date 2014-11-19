@@ -1,4 +1,57 @@
 python-socketlistener
 =====================
 
-A very basic client server setup for sending data encrypted over a unix or tcp socket
+A very basic client server setup for sending data encrypted over a unix or tcp socket.
+
+
+# Install 
+``` pip install python-socketlistener ```
+
+## Run Server
+```python
+
+    from python_socketserver.server import SocketServerCtl
+    server = SocketServerCtl(users={"flip": "plop"}, host='127.0.0.1', port=6666, verbose=True)
+    server.start()
+```
+
+You can check the status of the server with ```server.running()```
+
+## Process results
+```python
+
+    from python_socketserver.server import queue 
+
+    task = q.get()
+    if task:
+        ...
+        do_something_to_process(task)
+        ...
+```       
+
+To clear the queue run ```queue.flush()```
+
+
+## Send to server
+```python
+
+    from python_socketserver.client import SocketSender
+    a = SocketSender(user='flip', psk='plop')
+    a.send('Some string to be send')
+    a.close()
+
+```
+
+Or with the added script:
+
+```shell
+export SOCKET_USER='flip'
+export SOCKET_PSK='plop'
+
+bin/send2socket -s 127.0.0.1 -p 6666 -d plop
+
+```
+
+
+
+
