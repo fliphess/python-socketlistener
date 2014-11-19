@@ -11,18 +11,29 @@ A very basic client server setup for sending data encrypted over a unix or tcp s
 ```python
 
     from python_socketserver.server import SocketServerCtl
-    server = SocketServerCtl(users={"flip": "plop"}, host='127.0.0.1', port=6666, verbose=True)
+
+    server = SocketServerCtl(users={"flip": "plop"}, 
+                            host='127.0.0.1', 
+                            port=6666, 
+                            verbose=True)
     server.start()
+```
+
+## Stop Server
+```python
+
+    server.stop
 ```
 
 You can check the status of the server with ```server.running()```
 
 ## Process results
+
 ```python
 
     from python_socketserver.server import queue 
 
-    task = q.get()
+    task = queue.get()
     if task:
         ...
         do_something_to_process(task)
@@ -44,7 +55,8 @@ To clear the queue run ```queue.flush()```
 
 Or with the added script:
 
-```shell
+```sh
+
 export SOCKET_USER='flip'
 export SOCKET_PSK='plop'
 
