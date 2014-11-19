@@ -1,0 +1,15 @@
+Source: python-socketlistener
+Maintainer: Flip Hess <flip@fliphess.com>
+Section: python
+Priority: optional
+Standards-Version: 3.9.4
+Build-Depends: debhelper (>= 9), python, python-mock, python-nose, python-yaml
+
+Package: python-socketlistener
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ ${python:Depends}
+Description: Python module that facilitates a socket client and listener that use aes encryption over the line.
+ Python software and assorted utilities.

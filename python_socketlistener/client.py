@@ -1,6 +1,6 @@
 from base64 import b64encode
 import socket
-from python_socketserver.crypto import Crypto
+from python_socketlistener.crypto import Crypto
 
 
 class SocketSenderError(Exception):

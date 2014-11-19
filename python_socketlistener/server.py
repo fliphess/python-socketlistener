@@ -4,7 +4,7 @@ import socket
 import threading
 import time
 
-from python_socketserver.crypto import Crypto, CryptoException
+from python_socketlistener.crypto import Crypto, CryptoException
 
 
 class SocketInputQueue(list):

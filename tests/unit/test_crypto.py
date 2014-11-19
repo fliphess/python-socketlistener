@@ -1,4 +1,4 @@
-from python_socketserver.crypto import Crypto
+from python_socketlistener.crypto import Crypto
 from tests.test import SocketTestCase
 
 

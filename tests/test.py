@@ -26,6 +26,3 @@ class SocketTestCase(TestCase):
         patcher = mock.patch(to_patch)
         self.addCleanup(patcher.stop)
         return patcher.start()
-
-
-

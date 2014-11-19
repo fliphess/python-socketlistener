@@ -1,7 +1,7 @@
 import socket
 import time
-from python_socketserver.client import SocketSender
-from python_socketserver.server import SocketInputQueue, SocketEvent, SocketServerCtl, SocketServer
+from python_socketlistener.client import SocketSender
+from python_socketlistener.server import SocketInputQueue, SocketEvent, SocketServerCtl, SocketServer
 from tests.test import SocketTestCase
 
 
@@ -100,14 +100,14 @@ class TestSocketServer(SocketTestCase):
         super(TestSocketServer, self).tearDown()
         self.server.stop()
         self.client.close()
-        from python_socketserver.server import queue
+        from python_socketlistener.server import queue
         queue.flush()
 
     def test_that_socket_server_adds_event_to_queue_when_data_can_be_decrypted(self):
         self.client.send('test event')
         time.sleep(0.1)
 
-        from python_socketserver.server import queue
+        from python_socketlistener.server import queue
         self.assertEqual(queue[0]['address'][0], '127.0.0.1')
         self.assertEqual(queue[0]['data'], 'test event')
         self.assertEqual(queue[0]['user'], 'bob')
@@ -117,7 +117,7 @@ class TestSocketServer(SocketTestCase):
         c.send('alice sends')
         time.sleep(0.1)
 
-        from python_socketserver.server import queue
+        from python_socketlistener.server import queue
         self.assertEqual(queue[0]['address'][0], '127.0.0.1')
         self.assertEqual(queue[0]['data'], 'alice sends')
         self.assertEqual(queue[0]['user'], 'alice')
@@ -130,7 +130,7 @@ class TestSocketServer(SocketTestCase):
         self.client.send('bob sends')
         time.sleep(0.1)
 
-        from python_socketserver.server import queue
+        from python_socketlistener.server import queue
         self.assertEqual(queue[0]['user'], 'alice')
         self.assertEqual(queue[0]['data'], 'alice sends')
         self.assertEqual(queue[1]['user'], 'bob')
@@ -142,7 +142,7 @@ class TestSocketServer(SocketTestCase):
         c.close()
         time.sleep(0.1)
 
-        from python_socketserver.server import queue
+        from python_socketlistener.server import queue
         self.assertEqual(queue, [])
 
     def test_that_socket_server_does_not_add_event_to_queue_when_user_not_found(self):
@@ -150,7 +150,7 @@ class TestSocketServer(SocketTestCase):
         a.send('alice sends')
         time.sleep(0.1)
 
-        from python_socketserver.server import queue
+        from python_socketlistener.server import queue
         self.assertEqual(queue, [])
 
     def test_that_socket_server_does_not_add_event_to_queue_when_data_is_bogus(self):
@@ -159,5 +159,5 @@ class TestSocketServer(SocketTestCase):
         s.close()
         time.sleep(0.1)
 
-        from python_socketserver.server import queue
+        from python_socketlistener.server import queue
         self.assertEqual(queue, [])

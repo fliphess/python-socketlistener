@@ -53,5 +53,5 @@ bin/send2socket -s 127.0.0.1 -p 6666 -d plop
 ```
 
 
-
-
+## TODO 
+[ ] - Replace simple AES with another one that does not have an ugly stderr msg, which is in the debian repo
