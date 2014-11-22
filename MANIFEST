@@ -3,4 +3,5 @@ setup.py
 python_socketlistener/__init__.py
 python_socketlistener/client.py
 python_socketlistener/crypto.py
+python_socketlistener/queue.py
 python_socketlistener/server.py

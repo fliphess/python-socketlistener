@@ -22,10 +22,12 @@ class TestTcpDispatcherGetPsk(SocketTestCase):
 
 
 class TestSocketServer(SocketTestCase):
+
     def setUp(self):
         super(TestSocketServer, self).setUp()
         self.server = SocketListenerCtl(host=self.host, port=self.port, users=self.users, verbose=False)
         self.server.start()
+        time.sleep(0.1)
 
     def tearDown(self):
         super(TestSocketServer, self).tearDown()
@@ -33,44 +35,45 @@ class TestSocketServer(SocketTestCase):
         queue.flush()
 
     def test_that_socket_server_adds_event_to_queue_when_data_can_be_decrypted(self):
-        SocketSender(user='bob', psk='foo', host='127.0.0.1', port=self.port).send('test event')
+        SocketSender(user='bob', psk='foo', host='127.0.0.1', port=self.port).send('test event 1')
         time.sleep(0.1)
+
         self.assertEqual(len(queue), 1)
         self.assertEqual(queue[0]['address'][0], '127.0.0.1')
-        self.assertEqual(queue[0]['data'], 'test event')
+        self.assertEqual(queue[0]['data'], 'test event 1')
         self.assertEqual(queue[0]['user'], 'bob')
 
     def test_that_not_only_the_first_user_can_send(self):
-        SocketSender(user='alice', psk='bar', host='127.0.0.1', port=self.port).send('alice sends')
+        SocketSender(user='alice', psk='bar', host='127.0.0.1', port=self.port).send('alice sends 2')
         time.sleep(0.1)
 
         self.assertEqual(queue[0]['address'][0], '127.0.0.1')
-        self.assertEqual(queue[0]['data'], 'alice sends')
+        self.assertEqual(queue[0]['data'], 'alice sends 2')
         self.assertEqual(queue[0]['user'], 'alice')
 
     def test_that_socket_server_events_are_different_events_in_queue(self):
-        SocketSender(user='alice', psk='bar', host='127.0.0.1', port=self.port).send('alice sends')
-        SocketSender(user='bob', psk='foo', host='127.0.0.1', port=self.port).send('bob sends')
+        SocketSender(user='alice', psk='bar', host='127.0.0.1', port=self.port).send('alice sends 3')
+        SocketSender(user='bob', psk='foo', host='127.0.0.1', port=self.port).send('bob sends 4')
         time.sleep(0.1)
 
         self.assertEqual(len(queue), 2)
         self.assertEqual(queue[0]['user'], 'alice')
-        self.assertEqual(queue[0]['data'], 'alice sends')
+        self.assertEqual(queue[0]['data'], 'alice sends 3')
 
         self.assertEqual(queue[1]['user'], 'bob')
-        self.assertEqual(queue[1]['data'], 'bob sends')
+        self.assertEqual(queue[1]['data'], 'bob sends 4')
 
     def test_that_socket_server_does_not_add_event_to_queue_when_data_can_not_be_decrypted(self):
-        c = SocketSender(user='alice', psk='fooo', host='127.0.0.1', port=self.port)
-        c.send('alice sends')
-        c.close()
+        SocketSender(user='alice', psk='fooo', host='127.0.0.1', port=self.port).send('alice sends 5')
+        time.sleep(0.1)
+
         self.assertEqual(len(queue), 0)
         self.assertEqual(queue, [])
 
     def test_that_socket_server_does_not_add_event_to_queue_when_user_not_found(self):
-        a = SocketSender(user='flip', psk='fooo', host='127.0.0.1', port=self.port)
-        a.send('alice sends')
-        a.close()
+        SocketSender(user='flip', psk='fooo', host='127.0.0.1', port=self.port).send('alice sends')
+        time.sleep(0.1)
+
         self.assertEqual(len(queue), 0)
         self.assertEqual(queue, [])
 
@@ -79,5 +82,6 @@ class TestSocketServer(SocketTestCase):
         s.connect((self.host, self.port))
         s.send('bogus data')
         s.close()
+        time.sleep(0.1)
         self.assertEqual(len(queue), 0)
         self.assertEqual(queue, [])
