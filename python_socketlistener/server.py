@@ -3,94 +3,93 @@ from base64 import b64decode
 import socket
 import threading
 import time
-
 from python_socketlistener.crypto import Crypto, CryptoException
-
-
-class SocketInputQueue(list):
-    __instance = None
-
-    def __new__(cls):
-        if cls.__instance is None:
-            cls.__instance = super(SocketInputQueue, cls).__new__(cls)
-            cls.__instance.__initialized = False
-        return cls.__instance
-
-    def add(self, event):
-        self.append(event)
-
-    def get(self):
-        try:
-            return self.pop(0)
-        except IndexError:
-            return False
-
-    def flush(self):
-        self[:] = []
-
-queue = SocketInputQueue()
-
-
-class SocketEvent(dict):
-    def __init__(self, **kwargs):
-        super(SocketEvent, self).__init__()
-        self.update(kwargs)
+from python_socketlistener.queue import SocketEvent, queue
 
 
 class SocketListenerError(Exception):
     pass
 
 
-class SocketServer(asyncore.dispatcher):
+class SocketListener(asyncore.dispatcher):
     def __init__(self, users, host='127.0.0.1', port=6666, verbose=True):
-        self.verbose = verbose
+        self.users = users
         self.host = host
         self.port = port
-        self.users = users
+        self.verbose = verbose
 
         asyncore.dispatcher.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((self.host, self.port))
+        self.listen(5)
+
+    def handle_accept(self):
+        connection, address = self.accept()
+        if self.verbose:
+            self.log("[Connection] incoming tcp connection from %s:%s" % address)
+        TcpDispatcher(connection, address, self.users, self.verbose)
+
+
+class TcpDispatcher(asyncore.dispatcher_with_send):
+    def __init__(self, connection, address, users, verbose):
+        asyncore.dispatcher.__init__(self, connection)
+        self.connection = connection
+        self.address = address
+        self.users = users
+        self.verbose = verbose
+
+        self.from_remote_buffer = ''
+        self.to_remote_buffer = ''
+        self.sender = None
 
     def handle_connect(self):
-        if self.verbose:
-            self.log("[Connection] %s" % vars(self))
+        pass
 
     def handle_close(self):
         self.close()
         if self.verbose:
-            self.log("[Close] Closed connection to %s" % self.host)
+            self.log("[Close] Closed connection from %s:%s" % self.address)
+
+    def writable(self):
+        return len(self.to_remote_buffer) > 0
+
+    def handle_write(self):
+        sent = self.send(self.to_remote_buffer)
+        self.to_remote_buffer = self.to_remote_buffer[sent:]
 
     def handle_read(self):
         user = 'unknown'
-        data, address = self.recvfrom(2048)
+        data = self.recv(4096)
         if not data:
+            self.close()
             return
+        self.from_remote_buffer += data
 
         try:
             user, string = b64decode(data).split(':')
             psk = self._get_psk(user=user)
+
             if not psk:
                 if self.verbose:
-                    self.log("[%s] - No psk found for user %s" % (address, user))
+                    self.log("[%s] - No psk found for user %s" % (self.address[0], user))
                 return False
+
             decrypted_data = Crypto(psk=psk).decrypt(string=string)
-            if self.verbose:
-                self.log('[Incoming] - %s - %s - %s' % (user, address, decrypted_data))
-            if decrypted_data:
-                queue.add(SocketEvent(data=decrypted_data, address=address, user=user, time=time.ctime()))
-            else:
+            if not decrypted_data:
                 raise CryptoException('Failed to decrypt incoming data')
 
-        except (ValueError, TypeError):
             if self.verbose:
-                self.log('Failed to decode data from %s' % address)
+                self.log('[Incoming] - %s - %s - %s' % (user, self.address, decrypted_data))
+            queue.add(SocketEvent(data=decrypted_data, address=self.address, user=user, time=time.ctime()))
+        except (ValueError, TypeError) as e:
+            if self.verbose:
+                self.log('Failed to decode data from %s: %s' % (str(self.address), e))
             return False
 
         except CryptoException as e:
             if self.verbose:
-                self.log("[Decryption] Failed to decrypt input for user %s - %s: %s" % (address, user, e))
+                self.log("[Decryption] Failed to decrypt input for user %s - %s: %s" % (self.address, user, e))
             return False
 
     def _get_psk(self, user):
@@ -99,9 +98,9 @@ class SocketServer(asyncore.dispatcher):
         return False
 
 
-class SocketServerCtl(threading.Thread):
-    def __init__(self, users, host, port, verbose):
-        super(SocketServerCtl, self).__init__()
+class SocketListenerCtl(threading.Thread):
+    def __init__(self, users, host, port, verbose=True):
+        super(SocketListenerCtl, self).__init__()
         self.server = None
         self.host = host
         self.port = port
@@ -110,7 +109,7 @@ class SocketServerCtl(threading.Thread):
         self.continue_running = True
 
     def run(self):
-        self.server = SocketServer(host=self.host, port=self.port, users=self.users, verbose=self.verbose)
+        self.server = SocketListener(host=self.host, port=self.port, users=self.users, verbose=self.verbose)
         while self.continue_running:
             asyncore.poll()
 
@@ -123,3 +122,5 @@ class SocketServerCtl(threading.Thread):
     def reload(self):
         self.continue_running = False
         self.start()
+
+

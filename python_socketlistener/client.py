@@ -15,16 +15,22 @@ class SocketSender(object):
         self.user = user
         self.host = host
         self.port = port
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket = None
 
     def close(self):
-        return self.socket.close()
+        if self.socket:
+            return self.socket.close()
 
     def send(self, string):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
         c = Crypto(psk=self.psk)
         output = b64encode('%s:%s' % (self.user, c.encrypt(string=string)))
+
         try:
-            self.socket.sendto(output, (self.host, self.port))
+            self.socket.connect((self.host, self.port))
+            self.socket.sendall(output + "\n")
+            self.socket.close()
         except socket.error as e:
             raise SocketSenderError('Failed to send to %s:%s: %s' % (self.host, self.port, e))
         return True

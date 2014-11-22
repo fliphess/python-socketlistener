@@ -1,35 +1,33 @@
 #!/usr/bin/env python
 import time
 from python_socketlistener.client import SocketSender
-from python_socketlistener.server import queue, SocketServerCtl
+from python_socketlistener.server import SocketListenerCtl
+from python_socketlistener.queue import queue
 
 users = {'flip': 'plop'}
-host = '127.0.0.1'
+host = ''
 port = 6666
 verbose = True
-data = "efkjrwgmnsrkjdfxvreangklstbjknxd"
+data = "dit is een boodschap van flipje verzonden over tcp enkel om te testen of het werkt"
 
-print "@" * 20
-print "Starting loop"
-print "@" * 20
-server = SocketServerCtl(users=users, host=host, port=port, verbose=verbose)
-server.start()
-print "Server started"
+server = SocketListenerCtl(users=users, host=host, port=port, verbose=verbose)
 
-print "@" * 20
-print "Sending command %s" % data
-print "@" * 20
-client = SocketSender(user='flip', psk='plop', host=host, port=port)
-client.send(data)
-client.close()
-time.sleep(0.1)
-print "Done"
+try:
+    print "@" * 20, "Starting loop", "@" * 20
+    server.start()
+    print "Server started"
 
-print "@" * 20
-print "Stopping server"
-print "@" * 20
-server.stop()
 
-print "@" * 20
-print queue
-print "@" * 20
+    print "@" * 20, "Sending command %s" % data, "@" * 20
+    client = SocketSender(user='flip', psk='plop', host=host, port=port)
+    client.send(data)
+    client.close()
+    time.sleep(0.1)
+
+
+    print "@" * 20, "QUEUE", "@" * 20
+    print queue
+    print "@" * 20
+
+finally:
+    server.stop()
