@@ -122,5 +122,3 @@ class SocketListenerCtl(threading.Thread):
     def reload(self):
         self.continue_running = False
         self.start()
-
-

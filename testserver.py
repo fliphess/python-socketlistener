@@ -15,19 +15,17 @@ server = SocketListenerCtl(users=users, host=host, port=port, verbose=verbose)
 try:
     print "@" * 20, "Starting loop", "@" * 20
     server.start()
-    print "Server started"
+    print "[OK]"
 
-
-    print "@" * 20, "Sending command %s" % data, "@" * 20
-    client = SocketSender(user='flip', psk='plop', host=host, port=port)
-    client.send(data)
-    client.close()
+    print "@" * 20, "Sending command", "@" * 20
+    client = SocketSender(user='flip', psk='plop', host=host, port=port).send(data)
     time.sleep(0.1)
-
+    print "[OK]"
 
     print "@" * 20, "QUEUE", "@" * 20
     print queue
-    print "@" * 20
 
 finally:
+    print "@" * 20, "Stopping loop", "@" * 20
     server.stop()
+    print "[OK]"
